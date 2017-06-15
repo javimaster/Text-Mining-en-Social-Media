@@ -193,20 +193,20 @@ GenerateBoW <- function(path, vocabulary, n = 1000, lowcase = TRUE, punctuations
 		#  - Horóscopos
 		#  - Palabras revista Super Pop
     
-    cuentaAdj <- 0
-    line <- NuevaColumna(adjetivos,cuentaAdj,line,freq,tamaño)
-		cuentaPronombres <- 0
-		line <- NuevaColumna(pronombres,cuentaPronombres,line,freq,tamaño)
-    cuentaÑoño<-0
-		line <- NuevaColumna(sentimientos,cuentaÑoño,line,freq,tamaño)
-    cuentaMujer<-0
-	  line <- NuevaColumna(mujeres,cuentaMujer,line,freq,tamaño)
-    cuentaHombre<-0
-	  line <- NuevaColumna(hombres,cuentaHombre,line,freq,tamaño)
-    cuentaHoroscopo<-0
-    line <- NuevaColumna(horoscopos,cuentaHoroscopo,line,freq,tamaño)
-    cuentaSuperpop<-0
-    line<- NuevaColumna(superpops,cuentaSuperpop,line,freq,tamaño)
+   	cuentaAdj <- 0
+    	line <- NuevaColumna(adjetivos,cuentaAdj,line,freq,tamaño)
+	cuentaPronombres <- 0
+	line <- NuevaColumna(pronombres,cuentaPronombres,line,freq,tamaño)
+    	cuentaÑoño<-0
+	line <- NuevaColumna(sentimientos,cuentaÑoño,line,freq,tamaño)
+    	cuentaMujer<-0
+	line <- NuevaColumna(mujeres,cuentaMujer,line,freq,tamaño)
+    	cuentaHombre<-0
+	line <- NuevaColumna(hombres,cuentaHombre,line,freq,tamaño)
+    	cuentaHoroscopo<-0
+    	line <- NuevaColumna(horoscopos,cuentaHoroscopo,line,freq,tamaño)
+    	cuentaSuperpop<-0
+    	line<- NuevaColumna(superpops,cuentaSuperpop,line,freq,tamaño)
 
 
 		# Añadimos una octava columna con el total de palabras de los tweets del autor.
