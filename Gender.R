@@ -122,12 +122,12 @@ GenerateBoW <- function(path, vocabulary, n = 1000, lowcase = TRUE, punctuations
 	# Leemos de los ficheros para obtener listas
   
 	adjetivos<-lectorCampos(path_tematico2)
-  sentimientos<-lectorCampos(path_tematico)
-  hombres<-lectorCampos(path_tematico3)
-  mujeres<-lectorCampos(path_tematico4)
-  pronombres<-lectorCampos(path_tematico5)
+        sentimientos<-lectorCampos(path_tematico)
+  	hombres<-lectorCampos(path_tematico3)
+  	mujeres<-lectorCampos(path_tematico4)
+  	pronombres<-lectorCampos(path_tematico5)
 	horoscopos<-lectorCampos(path_tematico6)
-  superpops<-lectorCampos(path_tematico7)
+  	superpops<-lectorCampos(path_tematico7)
  
 	for (file in files) {
 		author <- gsub(".xml", "", file)
@@ -185,7 +185,7 @@ GenerateBoW <- function(path, vocabulary, n = 1000, lowcase = TRUE, punctuations
     
 		#Añadimos 7 columnas. Son la frecuencia de apariciones de las siguientes listas:
     
-    #  - Adjetivos
+    		#  - Adjetivos
 		#  - Pronombres
 		#  - Palabras cariñosas
 		#  - Palabras más frecuentes en mujeres
