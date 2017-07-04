@@ -1,0 +1,273 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage{acl2015}
+\usepackage{times}
+\usepackage{url}
+\usepackage{latexsym}
+
+\title{Esquema de paper. Asignatura Text Mining en Social Media. Master Big Data}
+
+\author{Javier Montagud G\'omez \\
+  {\tt javiganval@gmail.com} \\}
+
+\date{}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+El siguiente art\'iculo trata de predecir tanto el g\'enero como la variedad del autor de un tuit.\newline
+Para ello partimos de un dataset con un conjunto de tuits de diferentes autores. Partiendo de esto se consigue entrenar un modelo que se utilizar\'a para predecir ambas variables, género y variedad.\newline
+Dado que se trata de dos problemas diferentes, se han trabajado de forma separada.\newline
+Por un lado, para conseguir predecir el “G\'enero” he intentado plantearme preguntas relacionadas con el ¿c\'omo?. De ah\'i me han surgido diferentes t\'ecnicas que se explican con detalle en los siguientes apartados.\newline
+Por otro lado para predecir la “Variedad” he intentado plantearme preguntas relacionadas con el ¿qu\'e?. De ah\'i me han surgido diferentes t\'ecnicas que se explican con detalle en los siguientes apartados.\newline
+He realizado diferentes pruebas con diferentes modelos para tratar de obtener los mejores resultados para los dos problemas a tratar. En los siguientes apartados se comentan los resultados.\newline
+Por \'ultimo se pueden consultar tanto las concluisiones obtenidas como los posibles problemas pendientes de tratar.
+
+\end{abstract}
+
+\section{Introducci\'on}
+
+
+El presente documento trata de explicar c\'omo predecir con mayor exactitud la siguiente informaci\'on:
+
+\begin{itemize}
+ \item El sexo del autor de un tuit, si es hombre o mujer.
+ \item La variedad del autor de un tuit.
+\end{itemize}
+
+Para ello, partimos de un conjunto de 100 tuits por autor y un total de 2800 autores.
+Como punto de partida tenemos unos resultados de acierto que muestro a continuaci\'on y que tratar\'e de mejorar:
+
+\begin{itemize}
+ \item  G\'enero: 66.43\%
+ \item Variedad:77.021\%
+\end{itemize}
+
+Para conseguir ese resultado inicial se parte de la siguiente informaci\'on:
+\begin{itemize}
+ \item  Un vocabulario con las 1000 palabras m\'as frecuentes de todos los tuits del Corpus de entrenamiento. Previamente se procesa toda la informaci\'on con el fin de eliminar acentos, n\'umeros, palabras vac\'ias,…
+ \item Una bolsa de palabras con las frecuencias relativas de las palabras del vocabulario en los tuits de cada autor.
+ \item Un modelo entrenado con los datos de train que consisten en un conjunto de 100 tuits por autor con un total de 2800 autores.
+Tras evaluar el modelo con ciertos datos de test se consiguen los resultados mencionados anteriormente.
+\end{itemize}
+
+A continuaci\'on paso a describir el dataset y las diferentes t\'ecnicas utilizadas para conseguir mejorar el resultado inicial.
+Los mejores resultados obtenidos despu\'es de aplicar dichas t\'ecnicas son  considerablemente m\'as alto:
+\begin{itemize}
+ \item  G\'enero: 74\%
+ \item Variedad: 86\%
+\end{itemize}
+
+
+
+\section{Dataset}
+
+El proceso de construcci\'on del dataset ha sido el siguiente:
+\begin{itemize}
+ \item Se recuperan tuits enmarcados en una regi\'on geogr\'afica. Estos son longitud, latitud, radio
+ \item Se preseleccionan los usuarios \'unicos que han emitido tuits (filtrados por idioma del perfil)
+ \item Se recuperan los timelines de los usuarios \'unicos.
+ \item Se seleccionan los autores con m\'as de 100 tuits (que no sean retuits) en el idioma correspondiente y con la localizaci\'on geogr\'afica esperada en su perfil.
+ \item Se revisan manualmente los perfiles para asegurar el sexo.
+ \item Se seleccionan 100 tuits por autor para la construcci\'on del dataset final.
+\end{itemize}
+
+Las caracter\'isticas del dataset son las siguientes:
+\begin{itemize}
+ \item Se obtiene de Twitter
+ \item Se busca una colecci\'on de miles de autores.
+ \item Se recuperan cientos de tuits de autor.
+ \item Se recupera informaci\'on de gran variedad de temas.
+ \item Aproximadamente ocupa unos 54Mb descomprimido.
+\end{itemize}
+
+El formato de los ficheros descomprimidos es la siguiente:
+\begin{itemize}
+ \item 	Un par de ficheros de verdad: training.txt y test.txt. El formato es:
+ id:::sexo:::variedad
+ \item Un fichero .json por autor:
+\end{itemize}
+
+Lo que nos interesa explorar es lo siguiente:
+\begin{itemize}
+ \item N\'umero de autores por clase (sexo y variedad del lenguaje).
+ \item N\'umero de tuits por autor.
+ \item N\'umero de tuits por clase.
+ \item N\'umero de palabras por documento / autor / clase.
+ \item Distribuci\'on de palabras/documentos/autores por documento/autor/clase…
+ \item Longitud media de tuits, palabras, documentos...por clase.
+ \item Distribuci\'on temporal de los tuits, tuit m\'as antiguo, m\'as nuevo, media,
+ \item Palabras extra\~nas, frecuentes, comunes…
+\end{itemize}
+
+\section{Propuesta del alumno}
+
+Como punto de partida tenemos 2 resultados, uno para el \textbf{\textbf{g\'enero}} y otro para la \textbf{variedad}. Es por ello que he tratado tanto el \textbf{\textbf{g\'enero}} como la \textbf{variedad} como 2 problemas diferentes.\newline
+
+Ambos problemas los abordo con planteamientos diferentes para conseguir optimizar los resultados en cada uno de ellos.\newline
+
+Para el problema del “\textbf{\textbf{g\'enero}}” he intentado plantearme preguntas relacionadas con el ¿c\'omo?. Por ejemplo, ¿c\'omo escriben las mujeres y c\'omo escriben los hombres? ¿c\'omo utilizan los verbos las mujeres y c\'omo los utilizan los hombres? Haci\'endome este planteamiento, he encontrado diferencias sem\'anticas entre hombres y mujeres. He tratado de trasladarlas al dataset.\newline
+
+Para este primer problema he creado el fichero Gender.R.\newline
+Sobre la propuesta inicial he realizado las siguientes modificaciones:\newline
+En la fase de generaci\'on de la bolsa de palabras, he a\~nadido las siguientes columnas, que contienen las frecuencias  de las siguientes palabras en los tweets de cada autor:
+\begin{itemize}
+ \item Adjetivos: palabras localizadas en el fichero adjetivos.txt. En principio las mujeres utilizan m\'as los adjetivos que los hombres.
+ \item Pronombres: palabras localizadas en el fichero pronombres.txt. En principio las mujeres utilizan m\'as los pronombres que los hombres.
+ \item Palabras cari\~nosas: palabras localizadas en el fichero sentimientos.txt. En principio las mujeres utilizan m\'as los adjetivos que los hombres
+ \item Los hor\'oscopos. Palabras localizadas en el fichero horoscopo.txt
+ \item Las palabras m\'as frecuentes de las mujeres.Palabras localizadas en el fichero mujeres.txt
+ \item Las palabras m\'as frecuentes de los hombres.Palabras localizadas en el fichero hombres.txt
+ \item Las palabras de la revista Superpop.Palabras localizadas en el fichero superpop.txt
+
+\end{itemize}
+
+
+Estas frecuencias las he dividido por el n\'umero de palabras de los 100 tweets de cada autor. \newline
+No es lo mismo que la palabra “casa” aparezca 5 veces en un total de 100 palabras escritas por un autor que en un total de 200 palabras de otro autor. No tendr\'ia el mismo peso. Es por ello que lo dividimos por el total de palabras de cada autor.\newline
+Adicionalmente he a\~nadido una columna m\'as con el n\'umero de palabras de todos los tweets de cada autor.\newline
+
+En la fase de entrenamiento pruebo con los siguientes modelos:
+\begin{itemize}
+ \item SVMLinear
+ \item RandomForest
+ \item Penalized Multinomial Regression
+\end{itemize}
+
+Para el problema de la “\textbf{variedad}” he intentado plantearme preguntas relacionadas con el ¿qu\'e? Por ejemplo, ¿qu\'e palabras son las m\'as frecuentes en Espa\~na? De esta forma consigo ver diferencias entre las diferentes variedades e intento trasladarlas al dataset.\newline
+Para este problema he creado el fichero Variety.R.
+Sobre la propuesta inicial he realizado las siguientes modificaciones:\newline
+En la fase inicial, donde se preprocesan los datos, he quitado los acentos para conseguir que no se tuviesen en cuenta a la hora de entrenar el modelo.
+En la fase posterior, donde se genera la bolsa de palabras, he a\~nadido 8 nuevas columnas.
+7 de las columnas hacen referencia a cada una de las 7 variedades posibles. \newline
+Los valores de cada una de estas 7 columnas son:
+\begin{itemize}
+ \item Frecuencia de las 300 palabras m\'as repetidas en cada \textbf{variedad} dividido por el numero de palabras de los 100 tweets de cada autor.La \'ultima columna hace referencia al n\'umero de palabras de todos los tweets de cada autor.
+\end{itemize}
+
+En la fase de entrenamiento pruebo con los siguientes modelos:
+\begin{itemize}
+ \item SVMLinear
+ \item RandomForest
+ \item Penalized Multinomial Regression
+\end{itemize}
+
+
+\section{Resultados experimentales}
+
+Para el problema del \textbf{\textbf{g\'enero}} se realizan diferentes pruebas con diferentes m\'etodos que tras las pruebas se desestiman.\newline
+Los m\'etodos probados han sido entre otros los siguientes:
+\begin{itemize}
+ \item SVMLinear
+ \item RandomForest
+ \item Penalized Multinomial Regression
+\end{itemize}
+	
+El m\'etodo m\'as favorable es el “Penalized Multinomial Regression”.\newline
+Sobre dicho m\'etodo realizamos diferentes pruebas con diferentes combinaciones.\newline
+Los resultados obtenidos de dichas pruebas son los siguientes:
+
+\begin{table}[htbp]
+\begin{center}
+\begin{tabular}[t]{|l |c |r|}
+\hline
+M\'ETODO & ACCURACY & KAPPA \\
+\hline \hline
+Multinomial (1) & 0.7321 & 0.4643 \\ \hline
+Multinomial (2) & 0.7336 & 0.4671 \\ \hline
+Multinomial (3) & 0.7329  & 0.4657  \\ \hline
+Multinomial (4) & 0.7336 & 0.4671 \\ \hline
+Multinomial (5) & 0.7345 & 0.4612  \\ \hline
+Multinomial (6) & 0.7379  & 0.4757  \\ \hline
+Multinomial (7) & 0.7364  & 0.4729  \\ \hline
+\end{tabular}
+\label{tabla:sencilla}
+\end{center}
+\end{table}
+\textit {(1) Sin tener en cuenta los archivos mujeres.txt y hombres.txt}\newline
+\textit {(2) Con acentos}\newline
+\textit {(3) Añadiendo Superpop2.txt}\newline
+\textit {(4) Añadiendo el logaritmo del tamaño}\newline
+\textit {(5) Dividiendo el tamaño por la variedad}\newline
+\textit {(6) Añadiendo superpop.txt}\newline
+\textit {(7) Poniendo deportes.txt}\newline
+
+
+Para el problema de la \textbf{variedad} se realizan diferentes pruebas con los siguiente modelos:
+
+\begin{itemize}
+ \item SVMLinear
+ \item RandomForest
+ \item Penalized Multinomial Regression
+\end{itemize}
+El mejor resultado obtenido es con el m\'etodo RandomForest con un 82,92\%.\newline
+Los resultados obtenidos son los siguientes:
+
+\begin{table}[htbp]
+\begin{center}
+\begin{tabular}[t]{|l |c |r|}
+\hline
+M\'ETODO & ACCURACY & KAPPA \\
+\hline \hline
+SVMLinear (1) & 0.7829 & 0.7467 \\ \hline
+SVMLinear (2) & 0.7364 & 0.6925 \\ \hline
+SVMLinear (3) & 0.7029 & 0.6533 \\ \hline
+RandomForest (4) & 0.8636 & 0.8408 \\ \hline
+RandomForest (5) & 0.8292 & 0.8292 \\ \hline
+Multinomial (6) & 0.7893 & 0.7542 \\ \hline
+
+\end{tabular}
+\label{tabla:sencilla}
+\end{center}
+\end{table}
+
+\textit {(1) Palabras vocabulario: 1000, palabras variedad: 300}\newline
+\textit {(2) Palabras vocabulario: 500, palabras variedad: 300}\newline
+\textit {(3) Palabras vocabulario: 0, palabras variedad: 300}\newline
+\textit {(4) Palabras vocabulario: 1000, palabras variedad: 300}\newline
+\textit {(5) Palabras vocabulario: 1000, palabras variedad: 500}\newline
+\textit {(6) Palabras vocabulario: 1000, palabras variedad: 500}\newline
+
+
+
+
+\section{Conclusiones y trabajo futuro}
+
+Como conclusiones destaco las siguientes:
+\begin{itemize}
+ \item Para solucionar el problema del \textbf{\textbf{g\'enero}} es m\'as influyente buscar posibles patrones que den respuesta al ¿c\'omo?, por ejemplo ¿c\'omo se expresa la mujer?, mientras que para el problema de la \textbf{variedad} es m\'as influyente dar respuesta a preguntas relacionadas con el ¿qu\'e?. Por ejemplo, ¿qu\'e palabras son las m\'as frecuentes en Colombia?
+ \item El hecho de que hayan menos opciones en una clase a predecir no implica que por ello se obtengan mejores resultados y de forma m\'as f\'acil. Para este caso se obtienen mejores resultados y m\'as f\'acilmente cuando se trata de solucionar el problema de la \textbf{variedad}, teniendo \'esta muchas m\'as posibles opciones que el problema del \textbf{\textbf{g\'enero}}, que s\'olo tiene dos posibles. Hombre o mujer.
+ \item A nivel de resultados en la predicci\'on del \textbf{\textbf{g\'enero}} cabe destacar que el m\'etodo de Multinomial ha sido el mejor de todos los utilizados.
+ \item A nivel de resultados en la predicci\'on de la \textbf{variedad} cabe destacar que el m\'etodo de RandomForest ha sido el mejor de todos los utilizados con diferencia.
+
+\end{itemize}
+
+Como trabajo futuro, lo desglosar\'ia en los 2 problemas a resolver:\newline
+Para el problema del \textbf{\textbf{g\'enero}}:
+\begin{itemize}
+ \item Detecci\'on de los emoticonos. Creemos que las mujeres los utilizan m\'as y por tanto podr\'ia obtenerse mejoras.
+ \item Etiquetar cada palabra con alg\'un etiquetador. De esta forma sabr\'iamos que es un adjetivo, un pronombre y sobre todo que es un verbo y si es presente o pasado. Los verbos en presente son m\'as utilizados por las mujeres y esta ser\'ia una forma de detectarlos.
+\end{itemize}
+
+Para el caso de la \textbf{variedad}:
+\begin{itemize}
+ \item Etiquetar cada palabra con alg\'un etiquetador. De esta forma se podr\'ia tratar la informaci\'on del dataset de forma separada para que el modelo consiguiera encontrar posibles patrones.
+\end{itemize}
+
+\begin{thebibliography}{}
+
+El presente documento trata de explicar c\'omo predecir con mayor exactitud la siguiente informaci\'on:\newline\newline
+
+Libro de Hadley Wickham & Garrett Grolemund. R for Data Science.\newline\newline
+Las siguientes URLS:\newline
+-	https://stackoverflow.com/questions/tagged/r \newline
+-	http://www.statmethods.net/r-tutorial/index.html\newline
+-	https://stats.idre.ucla.edu/r/faq/\newline\newline
+Las fuentes de datos utilizadas para obtener diccionarios de diferentes conjuntos de palabras son:\newline
+-	http://www.superpop.es/\newline
+-	http://www.hola.com/horoscopo/\newline
+
+
+\end{thebibliography}
+
+\end{document}
